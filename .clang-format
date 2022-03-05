@@ -1,0 +1,12 @@
+IndentWidth: 4
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+IndentCaseLabels: true
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: false
+
+BinPackArguments: false
+BinPackParameters: false
+ContinuationIndentWidth: 2
