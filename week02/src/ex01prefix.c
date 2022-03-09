@@ -5,25 +5,32 @@
 
 #define PATH_SEPARATOR '\\'
 
+typedef struct CmdArgs CmdArgs;
+struct CmdArgs {
+    bool need_print;
+};
+
+enum CMD_ARGS {
+    ARG_EXE_NAME,
+    ARG_NEED_PRINT,
+    NUM_OF_ARGS,
+};
+
+CmdArgs parse_args(int argc, char** argv);
+char* basename(char* path);
+
+void print_usage(char* exe_name) {
+    puts("Usage:");
+    puts("======\n");
+
+    printf("%s [-p|--print]\n\n", exe_name);
+}
+
 int* crew_prefix_wrapper(int* array, size_t array_size);
 void crew_prefix(int* input, size_t array_size, int* output);
 
-char* basename(char* path);
-void print_usage(char* exe_name);
-
 int main(int argc, char** argv) {
-    if (argc > 2) {
-        print_usage(basename(argv[0]));
-        return EXIT_FAILURE;
-    }
-
-    bool need_print = false;
-    if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "--print")) {
-        need_print = true;
-    } else if (strcmp(argv[1], "")) {
-        print_usage(basename(argv[0]));
-        return EXIT_FAILURE;
-    }
+    CmdArgs args = parse_args(argc, argv);
 
     int array[] = {1, 2, 3, 4, 5};
     size_t array_size = sizeof(array) / sizeof(int);
@@ -34,7 +41,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    if (need_print) {
+    if (args.need_print) {
         printf("Prefix: [%d", prefix[0]);
         for (size_t i = 1; i < array_size; i++) {
             printf(", %d", prefix[i]);
@@ -71,6 +78,26 @@ void crew_prefix(int* input, size_t array_size, int* output) {
     }
 }
 
+CmdArgs parse_args(int argc, char** argv) {
+    CmdArgs args = {
+      .need_print = false,
+    };
+
+    if (argc > 2) {
+        print_usage(basename(argv[0]));
+        exit(EXIT_FAILURE);
+    }
+
+    if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "--print")) {
+        args.need_print = true;
+    } else if (strcmp(argv[1], "")) {
+        print_usage(basename(argv[0]));
+        exit(EXIT_FAILURE);
+    }
+
+    return args;
+}
+
 char* basename(char* path) {
     char* base = strrchr(path, PATH_SEPARATOR);
 
@@ -81,11 +108,4 @@ char* basename(char* path) {
     }
 
     return base;
-}
-
-void print_usage(char* exe_name) {
-    puts("Usage:");
-    puts("======\n");
-
-    printf("%s [-p|--print]\n\n", exe_name);
 }
