@@ -28,7 +28,7 @@ enum CMD_ARGS {
     ARG_NEED_FLOAT,
     ARG_FIRST_OPTIONAL,
     ARG_OUT_FILE = ARG_FIRST_OPTIONAL,
-    NUM_OF_ARGS
+    NUM_OF_ARGS,
 };
 
 CmdArgs parse_args(int argc, char** argv);
