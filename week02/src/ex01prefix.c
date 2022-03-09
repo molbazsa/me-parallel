@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "array_export.h"
+#include "perf_timing.h"
+
+#define ARRAY_FILENAME "data/int_array.dat"
+
 #define PATH_SEPARATOR '\\'
 
 typedef struct CmdArgs CmdArgs;
@@ -26,20 +31,21 @@ void print_usage(char* exe_name) {
     printf("%s [-p|--print]\n\n", exe_name);
 }
 
+int* import_array(char* filename, ArrayFileInfo* info);
+
 int* crew_prefix_wrapper(int* array, size_t array_size);
 void crew_prefix(int* input, size_t array_size, int* output);
 
 int main(int argc, char** argv) {
     CmdArgs args = parse_args(argc, argv);
 
-    int array[] = {1, 2, 3, 4, 5};
-    size_t array_size = sizeof(array) / sizeof(int);
+    ArrayFileInfo info = {0};
+    int* array = import_array(ARRAY_FILENAME, &info);
+    size_t array_size = info.num_of_elems;
 
     int* prefix = crew_prefix_wrapper(array, array_size);
-    if (!prefix) {
-        fputs("memory for the prefix array could not be allocated", stderr);
-        return EXIT_FAILURE;
-    }
+
+    free(array);
 
     if (args.need_print) {
         printf("Prefix: [%d", prefix[0]);
@@ -54,11 +60,58 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
+int* import_array(char* filename, ArrayFileInfo* info) {
+    errno = 0;
+    FILE* fp = fopen(filename, "rb");
+    if (!fp) {
+        perror("cannot open file for reading");
+        exit(EXIT_FAILURE);
+    }
+
+    size_t success = 0;
+
+    errno = 0;
+    success = fread(info, sizeof(ArrayFileInfo), 1, fp);
+    if (!success) {
+        fclose(fp);
+        perror("file info could not be read");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!is_compatible(*info) || !is_int_array(*info)) {
+        fputs("the array file is incompatible", stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    int* array = malloc(info->num_of_elems * sizeof(int));
+    if (!array) {
+        fclose(fp);
+        fputs("memory for the array could not be allocated", stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    errno = 0;
+    success = fread(array, sizeof(int), info->num_of_elems, fp);
+    if (success != info->num_of_elems) {
+        free(array);
+        fclose(fp);
+        perror("the array could not be read");
+        exit(EXIT_FAILURE);
+    }
+
+    return array;
+}
+
 int* crew_prefix_wrapper(int* array, size_t array_size) {
     int* result = malloc(array_size * sizeof(int));
-    if (result) {
-        crew_prefix(array, array_size, result);
+
+    if (!result) {
+        fputs("memory for the prefix array could not be allocated", stderr);
+        exit(EXIT_FAILURE);
     }
+
+    PERF_TIME(crew_prefix(array, array_size, result), "CREW Prefix");
+
     return result;
 }
 
