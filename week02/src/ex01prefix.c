@@ -141,11 +141,13 @@ CmdArgs parse_args(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "--print")) {
-        args.need_print = true;
-    } else if (strcmp(argv[1], "")) {
-        print_usage(basename(argv[0]));
-        exit(EXIT_FAILURE);
+    if (argc == 2) {
+        if (strcmp(argv[1], "-p") == 0 || strcmp(argv[1], "--print") == 0) {
+            args.need_print = true;
+        } else {
+            print_usage(basename(argv[0]));
+            exit(EXIT_FAILURE);
+        }
     }
 
     return args;
